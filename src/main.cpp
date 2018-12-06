@@ -1,85 +1,103 @@
-#include "simlib.h"
-#include <iostream>
+#define DEBUG_BUILD
 
-using namespace std;
+#include "main.hpp"
 
-Queue ordersWaitingForDrone("Orders waiting for drone");
-Facility drone;
+int maxDestinationDistance = 10000;
 
-class Order : public Process
+Queue packagesWaitingForDrone("Packages waiting for drone");
+Drone globalDrone;
+
+
+Drone::Drone(void)
 {
-	public:
-		bool hasDrone;
-
-		Order(void)
-		{
-		   this->hasDrone = false;
-		}
-
-		void Behavior()
-		{
-			this->getDrone();
-
-			// Simulate some process
-			Wait(Exponential(5));
-
-			this->releaseDrone();
-		}
-
-		void getDrone()
-		{
-			while(!this->hasDrone)
-			{
-				// Get the loading platform or go into queue
-				if(!drone.Busy())
-				{
-					Seize(drone);
-					this->hasDrone = true;
-				}
-				else
-				{
-					ordersWaitingForDrone.Insert(this);	// Move to the queue for available drone
-					Passivate(); // Sleep untill some activates this
-				}
-			}			
-		}
+	this->maxFlyingRange = maxDestinationDistance*2;	// Drone can travel to the farest destination and back
+	this->currentFlyingRange = this->maxFlyingRange;	// Drone has full battery when created
+	this->speed = 30 / 3.6 * 60; // meters per minute
+}
 
 
-		void releaseDrone()
-		{
-			if(this->hasDrone)
-			{
-				Release(drone); // Release drone
 
-				// Pass drone to the first in the queue waiting for drone
-				if(ordersWaitingForDrone.Length() > 0)
-				{
-					(ordersWaitingForDrone.GetFirst())->Activate();
-				}
-			}	
-			else
-				cerr << "Error: Tryied to release drone when doesn't have any\n";	
-		}
-};
 
-class OrderGenerator : public Event
+
+Package::Package(void)
 {
-	void Behavior()
+   this->drone = NULL;
+   this->destinationDistance = Exponential(maxDestinationDistance);	// How many meters must be traveled to deliver the package
+
+   DEBUG("Package created\n");
+}
+
+void Package::Behavior()
+{
+	this->getDrone();
+
+	Wait(5); // Grab the package
+
+	DEBUG("Package on the way\n");
+	Wait(this->destinationDistance/this->drone->speed/2);
+
+	DEBUG("Package delivered\n");
+
+	Wait(this->destinationDistance/this->drone->speed/2);
+	DEBUG("Returned home\n");
+
+	this->releaseDrone();
+}
+
+void Package::getDrone()
+{
+	while(!this->drone)
 	{
-		(new Order)->Activate();	// Generate new Order
-		Activate(Time+Exponential(10));	// Wait untill next generating
-	}
-};
+		// Get the loading platform or go into queue
+		if(!globalDrone.Busy())
+		{
+			Seize(globalDrone);
+			this->drone = &globalDrone;
+		}
+		else
+		{
+			packagesWaitingForDrone.Insert(this);	// Move to the queue for available drone
+			Passivate(); // Sleep untill some activates this
+		}
+	}			
+}
+
+
+void Package::releaseDrone()
+{
+	if(this->drone)
+	{
+		Release(*(this->drone)); // Release drone
+
+		this->drone = NULL;
+
+		// Pass drone to the first in the queue waiting for drone
+		if(packagesWaitingForDrone.Length() > 0)
+		{
+			(packagesWaitingForDrone.GetFirst())->Activate();
+		}
+	}	
+	else
+		cerr << "Error: Tryied to release drone when doesn't have any\n";	
+}
+
+
+void PackageGenerator::Behavior()
+{
+	(new Package)->Activate();	// Generate new Order
+	Activate(Time+Uniform(1,10));	// Wait untill next generating
+}
+
 
 int	main()
 {
 	// Prepare enviroment
 	Init(0,24*60); // 24 hours
-	(new OrderGenerator)->Activate();
+	(new PackageGenerator)->Activate();
 
 	// Execute simulation
 	Run();
 
 	// Print results
-	ordersWaitingForDrone.Output();
+	packagesWaitingForDrone.Output();
 }
