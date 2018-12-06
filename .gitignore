@@ -2,3 +2,9 @@
 ignore/
 
 src/main
+
+CMakeLists\.txt
+
+cmake-build-debug/
+
+\.idea/
