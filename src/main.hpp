@@ -22,7 +22,7 @@ class Drone : public Facility
         double battery;	// Current state of the battery (in meters)
 		double speed;
 
-		Drone(void);
+		Drone();
 		double travel(double distance);
 };
 
@@ -33,10 +33,22 @@ class Package : public Process
 		Drone* drone;
 		double destinationDistance;
 
-		Package(void);
+		Package();
 		void Behavior();
 		void getDrone();
+        void sendDroneHome();
+
 		void releaseDrone();
+};
+
+class DroneReturning : public Process
+{
+    public:
+        Drone* drone;
+        double headquartersDistance;
+
+        DroneReturning(Drone* drone, double distance);
+        void Behavior();
 };
 
 class PackageGenerator : public Event

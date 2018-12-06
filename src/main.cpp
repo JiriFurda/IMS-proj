@@ -45,14 +45,12 @@ void Package::Behavior()
     Wait(5); // Grab the package
 
     DEBUG("Package on the way\n");
-    Wait(this->drone->travel(this->destinationDistance));
-
+    Wait(this->drone->travel(this->destinationDistance));   // Flying to package destination
     DEBUG("Package delivered\n");
 
-    Wait(this->destinationDistance/this->drone->speed/2);
-    DEBUG("Returned home\n");
+    this->sendDroneHome();
 
-    this->releaseDrone();
+    DEBUG("Package leaving system\n");
 }
 
 void Package::getDrone()
@@ -73,12 +71,45 @@ void Package::getDrone()
     }
 }
 
+void Package::sendDroneHome()
+{
+    if(this->drone)
+    {
+        Release(*(this->drone));    // Transfer drone to DroneReturning process
+        (new DroneReturning(this->drone, destinationDistance))->Activate();
+    }
+    else
+        cerr << "ERROR: Cannot send drone home when don't have any";
+}
+
+
+DroneReturning::DroneReturning(Drone* drone, double distance)
+{
+    this->drone = drone;
+    this->headquartersDistance = distance;
+}
+
+void DroneReturning::Behavior()
+{
+    // Seize drone released by delivered package
+    if(!globalDrone.Busy())
+        Seize(*(this->drone));
+    else
+        cerr << "ERROR: Drone returning home is already seized";
+
+    // Travel back to headquarters
+    DEBUG("Drone is returing to HQ\n");
+    Wait(drone->travel(this->headquartersDistance));
+    DEBUG("Drone is at HQ\n");
+
+    // @todo
+}
 
 void Package::releaseDrone()
 {
     if(this->drone)
     {
-        Release(*(this->drone)); // Release drone
+         // Release drone
 
         this->drone = NULL;
 
