@@ -18,11 +18,12 @@ using namespace std;
 class Drone : public Facility
 {
 	public:
-		int maxFlyingRange;	// Capacity of the battery (in meters)
-		int currentFlyingRange;	// Current state of the battery (in meters)
-		int speed; 
+        double batteryMax;	// Capacity of the battery (in meters)
+        double battery;	// Current state of the battery (in meters)
+		double speed;
 
 		Drone(void);
+		double travel(double distance);
 };
 
 
@@ -30,7 +31,7 @@ class Package : public Process
 {
 	public:
 		Drone* drone;
-		int destinationDistance;
+		double destinationDistance;
 
 		Package(void);
 		void Behavior();
