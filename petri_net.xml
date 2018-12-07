@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="ISO-8859-1"?><pnml>
+<net id="Net-One" type="P/T net">
+<token id="Default" enabled="true" red="0" green="0" blue="0"/>
+<place id="Balík doru&#269;en">
+<graphics>
+<position x="760.7142857142858" y="179.99999999999997"/>
+</graphics>
+<name>
+<value>Balík doru&#269;en</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="Balík nalo&#382;en">
+<graphics>
+<position x="930.0" y="330.0"/>
+</graphics>
+<name>
+<value>Balík nalo&#382;en</value>
+<graphics>
+<offset x="53.5714285714286" y="-7.142857142857142"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="Droni na základn&#283;">
+<graphics>
+<position x="387.85714285714283" y="194.99999999999997"/>
+</graphics>
+<name>
+<value>Droni na základn&#283;</value>
+<graphics>
+<offset x="70.71428571428571" y="-5.714285714285717"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,3</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="Dron m&#367;&#382;e let&#283;t">
+<graphics>
+<position x="735.714285714286" y="329.28571428571433"/>
+</graphics>
+<name>
+<value>Dron m&#367;&#382;e let&#283;t</value>
+<graphics>
+<offset x="51.42857142857151" y="-10.714285714285712"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="Dron p&#345;i&#345;azen balíku">
+<graphics>
+<position x="510.00000000000006" y="330.0"/>
+</graphics>
+<name>
+<value>Dron p&#345;i&#345;azen balíku</value>
+<graphics>
+<offset x="68.57142857142865" y="-5.7142857142857135"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="Dron se musí dobít">
+<graphics>
+<position x="606.4285714285713" y="433.57142857142856"/>
+</graphics>
+<name>
+<value>Dron se musí dobít</value>
+<graphics>
+<offset x="60.71428571428576" y="-10.714285714285714"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="Fronta balík&#367;">
+<graphics>
+<position x="255.0" y="330.0"/>
+</graphics>
+<name>
+<value>Fronta balík&#367;</value>
+<graphics>
+<offset x="52.14285714285716" y="-7.857142857142864"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<transition id="T0">
+<graphics>
+<position x="122.14285714285711" y="330.0"/>
+</graphics>
+<name>
+<value>T0</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="T1">
+<graphics>
+<position x="387.85714285714283" y="330.0"/>
+</graphics>
+<name>
+<value>T1</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="T2">
+<graphics>
+<position x="607.857142857143" y="328.57142857142867"/>
+</graphics>
+<name>
+<value>T2</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="T3">
+<graphics>
+<position x="509.9999999999999" y="433.57142857142856"/>
+</graphics>
+<name>
+<value>T3</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="T4">
+<graphics>
+<position x="737.1428571428572" y="430.71428571428567"/>
+</graphics>
+<name>
+<value>T4</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="T5">
+<graphics>
+<position x="840.0" y="330.0"/>
+</graphics>
+<name>
+<value>T5</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="T6">
+<graphics>
+<position x="887.1428571428572" y="182.14285714285717"/>
+</graphics>
+<name>
+<value>T6</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="T7">
+<graphics>
+<position x="619.285714285714" y="179.99999999999997"/>
+</graphics>
+<name>
+<value>T7</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="T9">
+<graphics>
+<position x="255.00000000000003" y="197.1428571428571"/>
+</graphics>
+<name>
+<value>T9</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<arc id="Balík doru&#269;en to T7" source="Balík doru&#269;en" target="T7">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="757" y="192" curvePoint="false"/>
+<arcpath id="001" x="635" y="192" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="Balík nalo&#382;en to T6" source="Balík nalo&#382;en" target="T6">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="941" y="327" curvePoint="false"/>
+<arcpath id="001" x="939" y="189" curvePoint="false"/>
+<arcpath id="002" x="903" y="194" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="Droni na základn&#283; to T1" source="Droni na základn&#283;" target="T1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="399" y="221" curvePoint="false"/>
+<arcpath id="001" x="400" y="327" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="Droni na základn&#283; to T9" source="Droni na základn&#283;" target="T9">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="384" y="206" curvePoint="false"/>
+<arcpath id="001" x="272" y="204" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="Dron m&#367;&#382;e let&#283;t to T5" source="Dron m&#367;&#382;e let&#283;t" target="T5">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="762" y="341" curvePoint="false"/>
+<arcpath id="001" x="846" y="342" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="Dron p&#345;i&#345;azen balíku to T2" source="Dron p&#345;i&#345;azen balíku" target="T2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="536" y="341" curvePoint="false"/>
+<arcpath id="001" x="614" y="341" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="Dron p&#345;i&#345;azen balíku to T3" source="Dron p&#345;i&#345;azen balíku" target="T3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="522" y="356" curvePoint="false"/>
+<arcpath id="001" x="522" y="430" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="Dron se musí dobít to T4" source="Dron se musí dobít" target="T4">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="632" y="444" curvePoint="false"/>
+<arcpath id="001" x="743" y="443" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="Fronta balík&#367; to T1" source="Fronta balík&#367;" target="T1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="281" y="342" curvePoint="false"/>
+<arcpath id="001" x="394" y="342" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="T0 to Fronta balík&#367;" source="T0" target="Fronta balík&#367;">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="138" y="342" curvePoint="false"/>
+<arcpath id="001" x="252" y="342" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="T1 to Dron p&#345;i&#345;azen balíku" source="T1" target="Dron p&#345;i&#345;azen balíku">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="404" y="342" curvePoint="false"/>
+<arcpath id="001" x="507" y="342" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="T2 to Dron m&#367;&#382;e let&#283;t" source="T2" target="Dron m&#367;&#382;e let&#283;t">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="624" y="340" curvePoint="false"/>
+<arcpath id="001" x="732" y="340" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="T3 to Dron se musí dobít" source="T3" target="Dron se musí dobít">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="526" y="445" curvePoint="false"/>
+<arcpath id="001" x="603" y="445" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="T4 to Dron m&#367;&#382;e let&#283;t" source="T4" target="Dron m&#367;&#382;e let&#283;t">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="749" y="427" curvePoint="false"/>
+<arcpath id="001" x="747" y="355" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="T5 to Balík nalo&#382;en" source="T5" target="Balík nalo&#382;en">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="856" y="342" curvePoint="false"/>
+<arcpath id="001" x="927" y="342" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="T6 to Balík doru&#269;en" source="T6" target="Balík doru&#269;en">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="893" y="194" curvePoint="false"/>
+<arcpath id="001" x="787" y="192" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="T7 to Droni na základn&#283;" source="T7" target="Droni na základn&#283;">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="625" y="192" curvePoint="false"/>
+<arcpath id="001" x="414" y="205" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="T9 to Droni na základn&#283;" source="T9" target="Droni na základn&#283;">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="271" y="214" curvePoint="false"/>
+<arcpath id="001" x="297" y="254" curvePoint="false"/>
+<arcpath id="002" x="318" y="254" curvePoint="false"/>
+<arcpath id="003" x="386" y="214" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+</net>
+</pnml>
