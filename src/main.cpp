@@ -3,7 +3,7 @@
 #include "main.hpp"
 
 const double SETTINGS_maxDestinationDistance = 10000;
-const int SETTINGS_droneCount = 3;
+const int SETTINGS_droneCount = 30;
 const double SETTINGS_systemDuration = 24*60;
 const double SETTINGS_droneSpeed = 30;  // km/h
 const double SETTINGS_droneChargeTime = 30; // How many minutes it takes to charge dron from empty to full battery
@@ -41,6 +41,41 @@ Drone* Drone::findFree()
         }
     }
     return NULL;
+}
+
+Drone* Drone::findOptimal(double batteryRequired)
+{
+    double minBattery = numeric_limits<double>::max();
+    int minIndex = -1;
+    double maxBattery = numeric_limits<double>::min();
+    int maxIndex = -1;
+
+    // Search for ideal drone
+    for(int i=0; i < SETTINGS_droneCount; i++) // Loop through drones in the system
+    {
+        if(!drones[i].Busy()) // If found available one
+        {
+            if(drones[i].battery >= batteryRequired && drones[i].battery < minBattery)
+            {
+                minIndex = i;
+                minBattery = drones[i].battery;
+            }
+
+            if(drones[i].battery > maxBattery)
+            {
+                maxIndex = i;
+                maxBattery = drones[i].battery;
+            }
+        }
+    }
+
+    if(maxIndex == -1)
+        return NULL;    // Not found
+
+    if(minIndex != -1)
+        return &drones[minIndex];   // Found drone with enough battery
+
+    return &drones[maxIndex];   // Found available drone but not with enough battery
 }
 
 double Drone::travel(double distance)
@@ -114,6 +149,7 @@ void Package::getDrone()
     {
         // Get the drone or go into queue
         if(this->drone = Drone::findFree())
+        //if(this->drone = Drone::findOptimal(this->destinationDistance*2))
         {
             DEBUG("Package has assigned drone\n");
 

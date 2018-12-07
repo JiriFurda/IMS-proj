@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <limits>
 
 using namespace std;
 
@@ -29,7 +30,9 @@ class Drone : public Facility
 		double travel(double distance);
         double chargeForFlight(double distance);
         void charge(double value);
+
         static Drone* findFree();
+        static Drone* findOptimal(double requiredBattery);
 };
 
 
