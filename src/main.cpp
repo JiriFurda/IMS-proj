@@ -1,28 +1,32 @@
 #define DEBUG_BUILD
-#define DRONE_COUNT 3
 
 #include "main.hpp"
 
-int maxDestinationDistance = 10000;
+const double SETTINGS_maxDestinationDistance = 10000;
+const int SETTINGS_droneCount = 3;
+const double SETTINGS_systemDuration = 24*60;
+const double SETTINGS_droneSpeed = 30;  // km/h
+
+int STAT_packagesCount = 0;
 
 PackagesQueue packagesWaitingForDrone("Packages waiting for drone");
-Drone drones[DRONE_COUNT];
+Drone drones[SETTINGS_droneCount];
 
 
 
 
 Drone::Drone(void)
 {
-    this->batteryMax = maxDestinationDistance*2;	// Drone can travel to the farest destination and back
+    this->batteryMax = SETTINGS_maxDestinationDistance*2;	// Drone can travel to the most distant destination and back
     this->battery = this->batteryMax;	// Drone has full battery when created
-    this->speed = 30 / 3.6 * 60; // meters per minute (from 30 km/h)
+    this->speed = SETTINGS_droneSpeed / 3.6 * 60; // meters per minute (from 30 km/h)
     this->chargingRate = 500; // meters per minute
     this->beginOfIdle = Time;
 }
 
 Drone* Drone::findFree()
 {
-    for(int i=0; i < DRONE_COUNT; i++) // Loop through drones in the system
+    for(int i=0; i < SETTINGS_droneCount; i++) // Loop through drones in the system
     {
         if(!drones[i].Busy()) // If found available one
         {
@@ -70,9 +74,10 @@ void Drone::charge(double value)
 Package::Package(void)
 {
     this->drone = NULL; // Package has no drone when created
-    this->destinationDistance = Exponential(maxDestinationDistance);	// How many meters must be traveled to deliver the package
+    this->destinationDistance = Exponential(SETTINGS_maxDestinationDistance);	// How many meters must be traveled to deliver the package
 
     DEBUG("Package created (distance=" << this->destinationDistance << ")\n");
+    STAT_packagesCount++;
 }
 
 void Package::Behavior()
@@ -100,7 +105,7 @@ void Package::getDrone()
         if(this->drone = Drone::findFree())
         {
             DEBUG("Package has assigned drone\n");
-            
+
             Seize(*(this->drone));
 
             int debug = this->drone->battery;
@@ -183,7 +188,7 @@ void PackageGenerator::Behavior()
 int	main()
 {
     // Prepare environment
-    Init(0,24*60); // 24 hours
+    Init(0, SETTINGS_systemDuration);
     (new PackageGenerator)->Activate();
 
     // Execute simulation
