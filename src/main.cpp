@@ -4,15 +4,18 @@
 
 int maxDestinationDistance = 10000;
 
-Queue packagesWaitingForDrone("Packages waiting for drone");
+PackagesQueue packagesWaitingForDrone("Packages waiting for drone");
 Drone globalDrone;
+
+
 
 
 Drone::Drone(void)
 {
     this->batteryMax = maxDestinationDistance*2;	// Drone can travel to the farest destination and back
     this->battery = this->batteryMax;	// Drone has full battery when created
-    this->speed = 30 / 3.6 * 60; // meters per minute
+    this->speed = 30 / 3.6 * 60; // meters per minute (from 30 km/h)
+    this->chargingRate = 500; // meters per minute
 }
 
 double Drone::travel(double distance)
@@ -23,9 +26,25 @@ double Drone::travel(double distance)
         return (distance / this->speed);    // Return time needed to fly to destination
     }
     else
-        cerr << "Not enough battery to travel\n";
+        cerr << "ERROR: Not enough battery to travel\n";
 }
 
+double Drone::charge(double distance)
+{
+    if (this->battery < distance) {
+        double time = (distance - this->battery) / this->chargingRate;
+
+        DEBUG("Drone has to be charged (" << time << " minutes)\n");
+
+        this->battery += distance; // Charge battery
+        return time;   // Return time needed to charge
+    }
+    else
+    {
+        DEBUG("Drone has enough battery\n");
+        return 0;
+    }
+}
 
 
 
@@ -41,6 +60,8 @@ Package::Package(void)
 void Package::Behavior()
 {
     this->getDrone();
+
+    Wait(this->drone->charge(this->destinationDistance*2));  // Charge if needed
 
     Wait(5); // Grab the package
 
@@ -60,6 +81,8 @@ void Package::getDrone()
         // Get the loading platform or go into queue
         if(!globalDrone.Busy())
         {
+            DEBUG("Package has assigned drone\n");
+
             Seize(globalDrone);
             this->drone = &globalDrone;
         }
@@ -102,26 +125,24 @@ void DroneReturning::Behavior()
     Wait(drone->travel(this->headquartersDistance));
     DEBUG("Drone is at HQ\n");
 
-    // @todo
+
+    // Drone arrived to HQ
+    Release(*(this->drone));
+    packagesWaitingForDrone.sendNextPackage();
 }
 
-void Package::releaseDrone()
+
+
+void PackagesQueue::sendNextPackage()
 {
-    if(this->drone)
+    if(this->Length() > 0)  // If any package is waiting for drone
     {
-         // Release drone
-
-        this->drone = NULL;
-
-        // Pass drone to the first in the queue waiting for drone
-        if(packagesWaitingForDrone.Length() > 0)
-        {
-            (packagesWaitingForDrone.GetFirst())->Activate();
-        }
+        (this->GetFirst())->Activate(); // Activate Package process
     }
-    else
-        cerr << "Error: Tryied to release drone when doesn't have any\n";
 }
+
+
+
 
 
 void PackageGenerator::Behavior()

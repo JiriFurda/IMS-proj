@@ -21,9 +21,11 @@ class Drone : public Facility
         double batteryMax;	// Capacity of the battery (in meters)
         double battery;	// Current state of the battery (in meters)
 		double speed;
+		double chargingRate;
 
 		Drone();
 		double travel(double distance);
+        double charge(double distance);
 };
 
 
@@ -54,6 +56,14 @@ class DroneReturning : public Process
 class PackageGenerator : public Event
 {
 	void Behavior();
+};
+
+class PackagesQueue : public Queue
+{
+    using Queue::Queue; // Inherit constructor
+
+    public:
+        void sendNextPackage();
 };
 
 int	main();
