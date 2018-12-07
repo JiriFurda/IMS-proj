@@ -2,11 +2,11 @@
 
 #include "main.hpp"
 
-const double SETTINGS_maxDestinationDistance = 10000;
+const double SETTINGS_maxDestinationDistance = 16000;
 const int SETTINGS_droneCount = 30;
 const double SETTINGS_systemDuration = 24*60;
-const double SETTINGS_droneSpeed = 30;  // km/h
-const double SETTINGS_droneChargeTime = 30; // How many minutes it takes to charge dron from empty to full battery
+const double SETTINGS_droneSpeed = 80;  // km/h
+const double SETTINGS_droneChargeTime = 120; // How many minutes it takes to charge dron from empty to full battery
 
 int STAT_packagesCount = 0;
 int STAT_packagesDelivered = 0;
@@ -137,6 +137,7 @@ void Package::Behavior()
     Wait(this->drone->travel(this->destinationDistance));   // Flying to package destination
     STAT_packagesDelivered++;
     DEBUG("Package delivered\n");
+
 
     this->sendDroneHome();
 
