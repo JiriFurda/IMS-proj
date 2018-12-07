@@ -3,7 +3,8 @@
 
 #include "simlib.h"
 #include <iostream>
-
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -26,7 +27,10 @@ class Drone : public Facility
 
 		Drone();
 		double travel(double distance);
-        double charge(double distance);
+        double chargeForFlight(double distance);
+        void charge(double value);
+        bool isIdle();
+        static Drone* findFree();
 };
 
 

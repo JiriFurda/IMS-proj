@@ -1,11 +1,12 @@
 #define DEBUG_BUILD
+#define DRONE_COUNT 1
 
 #include "main.hpp"
 
 int maxDestinationDistance = 10000;
 
 PackagesQueue packagesWaitingForDrone("Packages waiting for drone");
-Drone drones[1];
+Drone drones[DRONE_COUNT];
 
 
 
@@ -19,6 +20,18 @@ Drone::Drone(void)
     this->beginOfIdle = Time;
 }
 
+Drone* Drone::findFree()
+{
+    for(int i=0; i < DRONE_COUNT; i++) // Loop through drones in the system
+    {
+        //if(drones[i].isIdle()) // If found available one
+        if(!drones[i].Busy()) // If found available one
+        {
+            return &drones[i];
+        }
+    }
+}
+
 double Drone::travel(double distance)
 {
     if(this->battery >= distance)
@@ -30,9 +43,10 @@ double Drone::travel(double distance)
         cerr << "ERROR: Not enough battery to travel\n";
 }
 
-double Drone::charge(double distance)
+double Drone::chargeForFlight(double distance)
 {
-    if (this->battery < distance) {
+    if(this->battery < distance)
+    {
         double time = (distance - this->battery) / this->chargingRate;
 
         DEBUG("Drone has to be charged (" << time << " minutes)\n");
@@ -47,6 +61,16 @@ double Drone::charge(double distance)
     }
 }
 
+void Drone::charge(double value)
+{
+    this->battery = min(this->batteryMax, this->battery + value);   // Add charged energy but do not exceed 100%
+}
+/*
+bool Drone::isIdle()
+{
+    return (this->beginOfIdle != -1);
+}
+*/
 
 
 
@@ -62,7 +86,7 @@ void Package::Behavior()
 {
     this->getDrone();
 
-    Wait(this->drone->charge(this->destinationDistance*2));  // Charge if needed
+    Wait(this->drone->chargeForFlight(this->destinationDistance * 2));  // Charge if needed
 
     Wait(5); // Grab the package
 
@@ -84,9 +108,16 @@ void Package::getDrone()
         {
             DEBUG("Package has assigned drone\n");
 
-            this->drone = &(drones[0]);
-            this->drone->beginOfIdle = -1;
+            this->drone = Drone::findFree(); // Asign free done
             Seize(*(this->drone));
+
+            int debug = this->drone->battery;
+            this->drone->charge(Time - this->drone->beginOfIdle); // Add charged energy while idling
+            if(debug != this->drone->battery)
+            {
+                DEBUG("Idle charged " << this->drone->battery - debug << " units\n");
+            }
+            this->drone->beginOfIdle = -1;
         }
         else
         {
@@ -122,6 +153,7 @@ void DroneReturning::Behavior()
     else
         cerr << "ERROR: Drone returning home is already seized\n";
 
+
     // Travel back to headquarters
     DEBUG("Drone is returning to HQ\n");
     Wait(drone->travel(this->headquartersDistance));
@@ -141,11 +173,7 @@ void PackagesQueue::sendNextPackage()
 {
     if(this->Length() > 0)  // If any package is waiting for drone
     {
-        Package* nextPackage;
-        nextPackage = (Package*)this->GetFirst();
-
-
-        nextPackage->Activate(); // Activate Package process
+        this->GetFirst()->Activate(); // Activate Package process
     }
 }
 
@@ -156,7 +184,7 @@ void PackagesQueue::sendNextPackage()
 void PackageGenerator::Behavior()
 {
     (new Package)->Activate();	// Generate new Order
-    Activate(Time+Uniform(1,10));	// Wait untill next generating
+    Activate(Time+Uniform(1000,1001));	// Wait untill next generating
 }
 
 
