@@ -6,8 +6,15 @@ const double SETTINGS_maxDestinationDistance = 10000;
 const int SETTINGS_droneCount = 3;
 const double SETTINGS_systemDuration = 24*60;
 const double SETTINGS_droneSpeed = 30;  // km/h
+const double SETTINGS_droneChargeTime = 30; // How many minutes it takes to charge dron from empty to full battery
 
 int STAT_packagesCount = 0;
+int STAT_packagesDelivered = 0;
+
+Stat STAT_chargingWithPackage("Charging with assigned package");
+Stat STAT_chargingWithoutPackage("Charging without assigned package");
+Stat STAT_idlingCharged("Idling fully charged");
+Stat STAT_traveling("Drone in flight");
 
 PackagesQueue packagesWaitingForDrone("Packages waiting for drone");
 Drone drones[SETTINGS_droneCount];
@@ -19,8 +26,8 @@ Drone::Drone(void)
 {
     this->batteryMax = SETTINGS_maxDestinationDistance*2;	// Drone can travel to the most distant destination and back
     this->battery = this->batteryMax;	// Drone has full battery when created
-    this->speed = SETTINGS_droneSpeed / 3.6 * 60; // meters per minute (from 30 km/h)
-    this->chargingRate = 500; // meters per minute
+    this->speed = SETTINGS_droneSpeed / 3.6 * 60; // meters per minute
+    this->chargingRate = this->batteryMax / SETTINGS_droneChargeTime; // meters per minute
     this->beginOfIdle = Time;
 }
 
@@ -55,7 +62,7 @@ double Drone::chargeForFlight(double distance)
 
         DEBUG("Drone has to be charged (" << time << " minutes)\n");
 
-        this->battery += distance; // Charge battery
+        this->charge(distance); // Charge battery
         return time;   // Return time needed to charge
     }
     else
@@ -84,12 +91,16 @@ void Package::Behavior()
 {
     this->getDrone();
 
-    Wait(this->drone->chargeForFlight(this->destinationDistance * 2));  // Charge if needed
+    // Charge if needed
+    double chargingTime = this->drone->chargeForFlight(this->destinationDistance * 2);
+    Wait(chargingTime);
+    STAT_chargingWithPackage(chargingTime);
 
     Wait(5); // Grab the package
 
     DEBUG("Package on the way\n");
     Wait(this->drone->travel(this->destinationDistance));   // Flying to package destination
+    STAT_packagesDelivered++;
     DEBUG("Package delivered\n");
 
     this->sendDroneHome();
@@ -108,13 +119,19 @@ void Package::getDrone()
 
             Seize(*(this->drone));
 
-            int debug = this->drone->battery;
-            this->drone->charge(Time - this->drone->beginOfIdle); // Add charged energy while idling
-            if(debug != this->drone->battery)
+            double batteryBeforeIdleCharge = this->drone->battery;
+            int idleDuration = Time - this->drone->beginOfIdle;
+
+            this->drone->charge(idleDuration); // Add charged energy while idling
+            if(batteryBeforeIdleCharge != this->drone->battery)
             {
-                DEBUG("Idle charged " << this->drone->battery - debug << " units\n");
+                DEBUG("Idle charged " << this->drone->battery - batteryBeforeIdleCharge << " units\n");
             }
-            this->drone->beginOfIdle = -1;
+            STAT_chargingWithoutPackage((this->drone->battery - batteryBeforeIdleCharge) / this->drone->chargingRate);
+            STAT_idlingCharged(idleDuration - (this->drone->battery - batteryBeforeIdleCharge) / this->drone->chargingRate);
+
+
+            this->drone->beginOfIdle = -1;  // Not idling anymore
         }
         else
         {
@@ -158,6 +175,7 @@ void DroneReturning::Behavior()
 
 
     // Drone arrived to HQ
+    STAT_traveling(this->headquartersDistance*2 / this->drone->speed);
     Release(*(this->drone));
     this->drone->beginOfIdle = Time;
     this->drone = NULL; // Unnecessary
@@ -196,4 +214,16 @@ int	main()
 
     // Print results
     packagesWaitingForDrone.Output();
+    STAT_chargingWithPackage.Output();
+    STAT_chargingWithoutPackage.Output();
+    STAT_idlingCharged.Output();
+    STAT_traveling.Output();
+
+    cout << "+----------------------------------------------------------+\n";
+    cout << "| STATISTIC                                                |\n";
+    cout << "+----------------------------------------------------------+\n";
+    cout << "|  Packages created = " << STAT_packagesCount << "\n";
+    cout << "|  Packages delivered = " << STAT_packagesDelivered << "\n";
+    cout << "+----------------------------------------------------------+\n";
+
 }
