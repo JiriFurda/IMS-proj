@@ -41,6 +41,7 @@ class Package : public Process
 	public:
 		Drone* drone;
 		double destinationDistance;
+		double createdAt;
 
 		Package();
 		void Behavior();

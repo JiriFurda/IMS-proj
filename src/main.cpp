@@ -10,11 +10,13 @@ const double SETTINGS_droneChargeTime = 120; // How many minutes it takes to cha
 
 int STAT_packagesCount = 0;
 int STAT_packagesDelivered = 0;
+int STAT_packagesDeliveredUnderLimit = 0;
 
 Stat STAT_chargingWithPackage("Charging with assigned package");
 Stat STAT_chargingWithoutPackage("Charging without assigned package");
 Stat STAT_idlingCharged("Idling fully charged");
 Stat STAT_traveling("Drone in flight");
+Stat STAT_deliveryTime("Delivery time");
 
 PackagesQueue packagesWaitingForDrone("Packages waiting for drone");
 Drone drones[SETTINGS_droneCount];
@@ -117,6 +119,7 @@ Package::Package(void)
 {
     this->drone = NULL; // Package has no drone when created
     this->destinationDistance = Exponential(SETTINGS_maxDestinationDistance);	// How many meters must be traveled to deliver the package
+    this->createdAt = Time;
 
     DEBUG("Package created (distance=" << this->destinationDistance << ")\n");
     STAT_packagesCount++;
@@ -135,8 +138,15 @@ void Package::Behavior()
 
     DEBUG("Package on the way\n");
     Wait(this->drone->travel(this->destinationDistance));   // Flying to package destination
-    STAT_packagesDelivered++;
     DEBUG("Package delivered\n");
+
+
+    // Update statistics
+    STAT_packagesDelivered++;
+    double deliveryDuration = Time - this->createdAt;
+    if(deliveryDuration <= 30)
+        STAT_packagesDeliveredUnderLimit++;
+    STAT_deliveryTime(deliveryDuration);
 
 
     this->sendDroneHome();
@@ -255,12 +265,14 @@ int	main()
     STAT_chargingWithoutPackage.Output();
     STAT_idlingCharged.Output();
     STAT_traveling.Output();
+    STAT_deliveryTime.Output();
 
     cout << "+----------------------------------------------------------+\n";
     cout << "| STATISTIC                                                |\n";
     cout << "+----------------------------------------------------------+\n";
     cout << "|  Packages created = " << STAT_packagesCount << "\n";
     cout << "|  Packages delivered = " << STAT_packagesDelivered << "\n";
+    cout << "|  Packages delivered under 30 minutes = " << STAT_packagesDeliveredUnderLimit << " (" << (float)STAT_packagesDeliveredUnderLimit/(float)STAT_packagesDelivered*100 << "%)\n";
     cout << "+----------------------------------------------------------+\n";
 
 }
