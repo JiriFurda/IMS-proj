@@ -22,6 +22,7 @@ class Drone : public Facility
         double battery;	// Current state of the battery (in meters)
 		double speed;
 		double chargingRate;
+		double beginOfIdle; // Time when started idle or -1 when used
 
 		Drone();
 		double travel(double distance);
