@@ -1,5 +1,5 @@
 #define DEBUG_BUILD
-#define DRONE_COUNT 1
+#define DRONE_COUNT 3
 
 #include "main.hpp"
 
@@ -24,12 +24,12 @@ Drone* Drone::findFree()
 {
     for(int i=0; i < DRONE_COUNT; i++) // Loop through drones in the system
     {
-        //if(drones[i].isIdle()) // If found available one
         if(!drones[i].Busy()) // If found available one
         {
             return &drones[i];
         }
     }
+    return NULL;
 }
 
 double Drone::travel(double distance)
@@ -65,13 +65,6 @@ void Drone::charge(double value)
 {
     this->battery = min(this->batteryMax, this->battery + value);   // Add charged energy but do not exceed 100%
 }
-/*
-bool Drone::isIdle()
-{
-    return (this->beginOfIdle != -1);
-}
-*/
-
 
 
 Package::Package(void)
@@ -79,7 +72,7 @@ Package::Package(void)
     this->drone = NULL; // Package has no drone when created
     this->destinationDistance = Exponential(maxDestinationDistance);	// How many meters must be traveled to deliver the package
 
-    DEBUG("Package created\n");
+    DEBUG("Package created (distance=" << this->destinationDistance << ")\n");
 }
 
 void Package::Behavior()
@@ -104,11 +97,10 @@ void Package::getDrone()
     while(!this->drone)
     {
         // Get the drone or go into queue
-        if(!drones[0].Busy())
+        if(this->drone = Drone::findFree())
         {
             DEBUG("Package has assigned drone\n");
-
-            this->drone = Drone::findFree(); // Asign free done
+            
             Seize(*(this->drone));
 
             int debug = this->drone->battery;
@@ -184,7 +176,7 @@ void PackagesQueue::sendNextPackage()
 void PackageGenerator::Behavior()
 {
     (new Package)->Activate();	// Generate new Order
-    Activate(Time+Uniform(1000,1001));	// Wait untill next generating
+    Activate(Time+Uniform(1,15));	// Wait untill next generating
 }
 
 
