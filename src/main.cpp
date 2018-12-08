@@ -4,7 +4,7 @@
 
 const double SETTINGS_maxDestinationDistance = 16000;
 const int SETTINGS_droneCount = 30;
-const double SETTINGS_systemDuration = 24*60;
+const double SETTINGS_systemDuration = 417;
 const double SETTINGS_droneSpeed = 80;  // km/h
 const double SETTINGS_droneChargeTime = 120; // How many minutes it takes to charge dron from empty to full battery
 
@@ -26,7 +26,7 @@ Drone drones[SETTINGS_droneCount];
 
 Drone::Drone(void)
 {
-    this->batteryMax = SETTINGS_maxDestinationDistance*2;	// Drone can travel to the most distant destination and back
+    this->batteryMax = 40000;	// Drone can travel up to 40 km with full battery
     this->battery = this->batteryMax;	// Drone has full battery when created
     this->speed = SETTINGS_droneSpeed / 3.6 * 60; // meters per minute
     this->chargingRate = this->batteryMax / SETTINGS_droneChargeTime; // meters per minute
@@ -118,11 +118,15 @@ void Drone::charge(double value)
 Package::Package(void)
 {
     this->drone = NULL; // Package has no drone when created
-    this->destinationDistance = Exponential(SETTINGS_maxDestinationDistance);	// How many meters must be traveled to deliver the package
+    this->destinationDistance = Uniform(100, SETTINGS_maxDestinationDistance);	// How many meters must be traveled to deliver the package
     this->createdAt = Time;
+
 
     DEBUG("Package created (distance=" << this->destinationDistance << ")\n");
     STAT_packagesCount++;
+
+    if (this->destinationDistance > SETTINGS_maxDestinationDistance)
+        exit(-1);
 }
 
 void Package::Behavior()
@@ -159,8 +163,8 @@ void Package::getDrone()
     while(!this->drone)
     {
         // Get the drone or go into queue
-        if(this->drone = Drone::findFree())
-        //if(this->drone = Drone::findOptimal(this->destinationDistance*2))
+        //if(this->drone = Drone::findFree())
+        if(this->drone = Drone::findOptimal(this->destinationDistance*2))
         {
             DEBUG("Package has assigned drone\n");
 
@@ -246,7 +250,7 @@ void PackagesQueue::sendNextPackage()
 void PackageGenerator::Behavior()
 {
     (new Package)->Activate();	// Generate new Order
-    Activate(Time+Uniform(1,15));	// Wait untill next generating
+    Activate(Time+Uniform(1,2));	// Wait untill next generating
 }
 
 
