@@ -2,12 +2,13 @@
 
 #include "main.hpp"
 
-#define CZECH_DAYLIGHT 787
+#define CZ_SUMMER_DAYLIGHT 787
+#define CZ_WINTER_DAYLIGHT 479
 
 const double SETTINGS_maxBattery = 40000;
 const double SETTINGS_maxDestinationDistance = 16000;
-const int SETTINGS_droneCount = 3;
-const double SETTINGS_systemDuration = CZECH_DAYLIGHT;
+const int SETTINGS_droneCount = 144;
+const double SETTINGS_systemDuration = CZ_SUMMER_DAYLIGHT;
 const double SETTINGS_droneSpeed = 80;  // km/h
 const double SETTINGS_droneChargeTime = 120; // How many minutes it takes to charge dron from empty to full battery
 const double SETTINGS_orderAcceptance = SETTINGS_systemDuration - 180; // make sure all packages are delivered
@@ -125,8 +126,8 @@ void Drone::charge(double value)
 Package::Package(void)
 {
     this->drone = NULL; // Package has no drone when created
-    //this->destinationDistance = Random()*SETTINGS_maxDestinationDistance;	// How many meters must be traveled to deliver the package
-    this->destinationDistance = 8000;
+    this->destinationDistance = Random()*SETTINGS_maxDestinationDistance;	// How many meters must be traveled to deliver the package
+    //this->destinationDistance = 8000;
     this->createdAt = Time;
 
     STAT_distance(this->destinationDistance);
@@ -177,7 +178,6 @@ void Package::getDrone()
         {
             DEBUG("Package has assigned drone\n");
 
-            cout <<"179\n";
             Seize(*(this->drone));
 
             double batteryBeforeIdleCharge = this->drone->battery;
@@ -228,7 +228,6 @@ void DroneReturning::Behavior()
     // Seize drone released by delivered package
     if(!this->drone->Busy())
     {
-        cout << "228\n";
         Seize(*(this->drone));
     }
     else
@@ -243,9 +242,8 @@ void DroneReturning::Behavior()
 
     // Drone arrived to HQ
     STAT_traveling(this->headquartersDistance*2 / this->drone->speed);
-    cout << "240\n";
     Release(*(this->drone));
-    this->drone->returning = true;
+    this->drone->returning = false;
     this->drone->beginOfIdle = Time;
     this->drone = NULL; // Unnecessary
     packagesWaitingForDrone.sendNextPackage();
@@ -268,7 +266,7 @@ void PackageGenerator::Behavior()
     if (Time <= SETTINGS_orderAcceptance)
     {
         (new Package)->Activate();	// Generate new Order
-        Activate(Time+ 15);	// Wait untill next generating
+        Activate(Time+ Exponential(1));	// Wait untill next generating
     }
 }
 
@@ -295,9 +293,10 @@ int	main()
     cout << "+----------------------------------------------------------+\n";
     cout << "| STATISTIC                                                |\n";
     cout << "+----------------------------------------------------------+\n";
+    cout << "|  Number of drones = " << sizeof(drones)/sizeof(Drone) << "\n";
     cout << "|  Packages created = " << STAT_packagesCount << "\n";
     cout << "|  Packages delivered = " << STAT_packagesDelivered << "\n";
-    cout << "|  Packages delivered under 30 minutes = " << STAT_packagesDeliveredUnderLimit << " (" << (float)STAT_packagesDeliveredUnderLimit/(float)STAT_packagesDelivered*100 << "%)\n";
+    cout << "|  Packages delivered under 30 minutes = " << STAT_packagesDeliveredUnderLimit << " (" << (float)STAT_packagesDeliveredUnderLimit/(float)STAT_packagesCount*100 << "%)\n";
     cout << "+----------------------------------------------------------+\n";
 
 }
