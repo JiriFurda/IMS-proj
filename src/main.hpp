@@ -6,6 +6,9 @@
 #include <vector>
 #include <algorithm>
 #include <limits>
+#include <cmath>
+#include <ctime>
+
 
 using namespace std;
 
@@ -25,11 +28,13 @@ class Drone : public Facility
 		double speed;
 		double chargingRate;
 		double beginOfIdle; // Time when started idle or -1 when used
+		double startOfCharge;
 
 		Drone();
 		double travel(double distance);
         double chargeForFlight(double distance);
         void charge(double value);
+        bool returning;
 
         static Drone* findFree();
         static Drone* findOptimal(double requiredBattery);
