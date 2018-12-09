@@ -1,0 +1,234 @@
+\documentclass[czech, 12pt, a4paper]{article}
+
+\usepackage[left=2cm, text={17cm, 24cm}, top=3cm]{geometry}
+\usepackage[czech]{babel}
+\usepackage[utf8]{inputenc}
+%\usepackage[IL2]{fontenc}
+%\usepackage[obeyspaces, spaces]{url}
+%\usepackage{amsmath}
+%\usepackage{amsthm}
+%\usepackage{amsfonts}
+%\usepackage{amssymb}
+\usepackage{url}
+\usepackage[strings]{underscore}
+\usepackage{etoolbox}
+\usepackage{indentfirst}
+\apptocmd{\thebibliography}{\raggedright}{}{}
+\addto\captionsczech{\renewcommand{\figurename}{Obrázok}}
+
+\bibliographystyle{czplain}
+
+\newcommand{\myuv}[1]{\quotedblbase #1\textquotedblleft}
+
+
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{graphicx}
+
+\definecolor{mGreen}{rgb}{0,0.6,0}
+\definecolor{mGray}{rgb}{0.5,0.5,0.5}
+\definecolor{mPurple}{rgb}{0.58,0,0.82}
+\definecolor{backgroundColour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{CStyle}{
+    backgroundcolor=\color{backgroundColour},   
+    commentstyle=\color{mGreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{mGray},
+    stringstyle=\color{mPurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    language=C
+}
+
+\lstdefinestyle{DOS}
+{
+    backgroundcolor=\color{black},
+    basicstyle=\scriptsize\color{white}\ttfamily
+}
+
+\lstset{
+  language=bash,
+  basicstyle=\ttfamily
+}
+
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+    \large
+    \textsc{Vysoké učení technikcé v~Brně\linebreak \noindent Fakulta informačních technologií}\\
+    \vspace{\stretch{0.382}}
+    \LARGE 
+    Modelování a simulace\linebreak
+    \noindent \Huge Simulácia prepravy za pomocou dronov\\
+    \vspace{\stretch{0.618}}
+    \vspace{2cm}
+    \LARGE
+    Peter Havan (xhavan00)\\
+    Jiří Furda (xfurda00)
+    \vfill
+    \large
+    \today
+\end{center}
+
+%{\LARGE Peter Havan (xhavan00) \hfill \today \\Jiří Furda (xfurda00)}
+\end{titlepage}
+
+
+
+\tableofcontents
+\newpage
+
+\section{Úvod}
+Tento projekt rieší implementáciu simulačného modelu(\cite{prednasky}, slajd 7.) donášky tovaru za pomoci dronov. V súčastnosti je veľká snaha najväčších doručovacích spoločností implementovať tento spôsob doručovania, menovite napríklad Amazon či UPS\cite{businessInsider}. Účelom nášho projektu je zistiť efektívnosť doručovania tovaru za pomoci dronov, overiť schopnosť doručovať zásielky včas (podľa Amazonu do 30 minút\cite{amazonPrime}) aj pre kritické počty objednávok s určitým počtom dronov.
+Zaujímavosťou, ale aj veľkou prekážkou je fakt, že tento systém(\cite{prednasky}, slajd 18.) je ešte stále vo fázi vývoja a aktuálne nie je v prevádzke. Z toho dôvodu boli nutné hypotézy na zatiaľ neznáme aspekty založené na klasickom spôsobe doručovania tovaru.
+
+
+\subsection{Autori a zdroje}
+Autormi projektu sú Jiří Furda a Peter Havan. Medzi hlavné zdroje patrili štatistiky uverejnené spoločnosťou Amazon, znalosti získané v predmete Modelování a simulace vyučovanom na fakulte Informačních Technologií, VUT v Brně, dokumentácia a examply k \texttt{C++} knižnici \texttt{SIMLIB}(\cite{prednasky}, slajd 119.), technické špecifikácie k hardwaru relevatného pre náš model, technické správy zaoberajúce sa príbuznom tématikou.
+
+\subsection{Validita modelu}
+Keďže je dronová donášková služba vo vývoji a reálnom svete nie je v plnej prevádzke, nemohol byť model porovnávaný so systémom v praxi. Model je postavený na verejne dostupných informáciach vydaných spoločnosťou Amazon a reflektuje ich aktuálny plán systému dopravy tovaru. Tento systém je však vo vývoji od roku 2013\cite{amazonPrime}. To znamená, že výsledný systém sa môže výrazne výrazne líšiť od plánu, na ktorom je náš model postavený. Validita(\cite{prednasky}, slajd 37.) by bez dodatočných úprav bola kompromitovaná. Predpokladáme však, že informácie dostupné na internete sú získané praktickým testovaním a odpovedajú reálnej situácií, keďže testovanie v teréne bolo poprvýkrát uskutočné už roku 2016\cite{amazonPrime} a spoločnosť Amazon vkladá nemalé úsilie do vývoja\cite{businessInsider}. Náš model sme prehlásili za validný pre plán systému, ktorý je dostupný verejnosti.
+
+\newpage
+\section{Rozbor témy a použitých technológií}
+Podľa plánu spoločnosti Amazon by ich program s názvom Amazon Air Prime mal byť schopný doručovať zásielky v okruhu 16 km od pobočky do 30 minút od zadania objednávky. Drony majú batériu s výdržou 30 minút pri lete s maximálnou rýchlosťou 80.5 km/h a maximálnym dosahom 16 km. Optimálna hmotnosť zásielky je stanovená na 2.3 kg\cite{specsRef}. Pri tejto rýchlosti by cesta doručenia a návratu nikdy nemala presiahnuť čas výdrže batérie. Dĺžka nabíjania batérie z vybitého stavu na plno nabitý je 2 hodiny.\cite{batterySpecsRef}
+
+\begin{figure}[h!]
+	\begin{centering}
+	\includegraphics[width=0.7\linewidth]{specs.eps}
+	\caption{Špecifikácia ideálneho dronu pre Amazon\cite{specsRef}}
+	\label{specs}
+	\end{centering}
+\end{figure}
+
+Jeff Bezos, riaditeľ firmy Amazon, v rozhovore uviedol, že by drony mohli doručovat balíky do hmotnosti až 2.27 kg v okruhu 16km za predpokladu denného svitu a priaznivého počasia.\cite{guardianRef}
+
+
+\subsection{Popis použitých postupov}
+Model bol implementovaný v programovacom jazyku \texttt{C++} najmä z dôvodu existencie jeho knižnice \texttt{SIMLIB}, ktorá poskytuje prostriedky na jednoduchú implementáciu simulačného modelu vhodného pre naše potreby.
+
+\subsection{Pôvod použitých metód}
+Použité metódy pochádzajú z informácií poskytnutých v predmete Modelování a simulace na FIT VUT v Brne. Pri návrhu bola využitá Petriho sieť(\cite{prednasky}, slajd 123.) a pri implementácií knižnica \texttt{SIMLIB}, jej dokumentácia a ukážkové príklady z dokumentácie. 
+
+
+\newpage
+\section{Koncepcia}
+Simulujeme(\cite{prednasky}, slajd 33.) príchod objednávok do systému, ich vybavenie, doručenie tovaru. Veľmi dôležitým prvkom je sledovanie batérie jednotlivých dronov. Obmedzený dolet a potreba nabíjania sú hlavnou prekážkou, mimo problémov s legislatívou, ktorú dronové doručovanie musí zohľadniť. Pri modelovaní sme nezohľadnili ľudský element, pretože žiadne dostupné zdroje naň nepoukazujú ako na významný. Ďalej sme zanedbali poruchovosť dronov, pretože tá by sa ukázala až pri reálnom stres teste po spustení systému. Fakt, že v nočných hodinách, poprípadne za nepriaznivého počasia drony niesú schopné balíky doručovať je pre náš model irelevatný. Simulujeme situáciu počas jedného dňa za dobrého počasia a neriešime alternatívy, ktoré by v týchto prípadoch museli byť využité. 
+
+\begin{figure}[h!]
+	\includegraphics[width=\linewidth]{petri.eps}
+	\caption{Petriho sieť pre zjednodušený model}
+	\label{petri}
+\end{figure}
+
+Na obrázku \ref{petri} môžeme vidieť:
+\begin{itemize}
+\item Prechod \texttt{0} vstupujúca transakcia (objednávka) do systému
+\item Prechod \texttt{T1} reprezentujúci \textbf{zjednodušené} priraďovanie dronu bližšie popísané v sekcií \ref{archi}
+\item Prechod \texttt{T2} reprezentujúci fakt, že priradený dron má dostatok batérie, aby balíček doručil
+\item Prechod \texttt{T3} reprezentujúci fakt, že priradený dron nemá dostatok batérie, aby balíček doručil
+\item Prechod \texttt{T4} reprezentujúci dobitie dronu na minimálnu úroveň batérie pre doručenie balíčku a cesty späť
+\item Prechod \texttt{T5} reprezentujúci nakladenie balíčku
+\item Prechod \texttt{T6} reprezentujúci doručovanie balíčku
+\item Prechod \texttt{T7} reprezentujúci návrat drona
+\item Prechod \texttt{T9} reprezentujúci \textbf{zjednodušené} nabíjanie dronu bližšie popísané v sekcií \ref{archi} 
+\end{itemize}
+
+
+
+
+\section{Architektúra simulačného modelu/simulatóru}\label{archi}
+Pre účely projektu bol využitý programovací jazyk \texttt{C++} a jeho knižnica \texttt{SIMLIB}. 
+Do programu vstupujú objednávky generované triedou \texttt{PackageGenerator}, ktorá je podtriedou abstraktnej triedy \texttt{Event} knižnice \texttt{SIMLIB}. Objednávky postupne obsadzujú drony (trieda \texttt{Drone}), ktoré následne tovar doručia. Dron sa po doručení vracia naspäť. Po vrátení začne proces nabíjania batérie dronu. Priorita výberu drona pre balíček však hovorí, že bude vybraný dron s minimálnou aktuálnou výdržou batérie, ktorý má zároveň dostatok energie na to, aby balík úspešne doručil a vrátil sa späť. Toto opatrenie zvýši šancu, že na sklade bude dostupný dron pre maximálne vzdialenosti. V prípade, že príde objednávka a nenájde žiaden voľný dron, radí sa fronty a čaká na uvoľnenie ďaľšieho drona. Fronta je spoločná pre všetky drony.
+
+\subsection{Mapovanie abstraktného modelu do simulačného}
+Na obrázku \ref{petri} je zobrazený zjednodušený konceptuálny model(\cite{prednasky}, slajd 48.). Jeho mapovanie na simulačný model je nasledovné:
+
+\begin{itemize}
+	\item Trieda \texttt{Drone}, podtrieda \texttt{SIMLIB} triedy \texttt{Facility}, ktorá zastupuje tokeny z miesta \textit{Droni na základně}. Obsahuje:
+	\begin{itemize}
+		\item metódu \texttt{charge}, zastupujúcu prechod \texttt{T9}
+		\item metódu \texttt{chargeforFlight}, zastupujúcu prechod \texttt{T4}
+		\item metódu \texttt{travel}, zastupujúcu prechod \texttt{T6}
+		\item metódu \texttt{findOptimal}, zastupujúcu prechod \texttt{T1}
+		\item atribúty zastupujúce vlastnosti jednotlivých dronov pre chod simulácie, napríklad aktuálny stav batérie, a údaje pre štatistiku
+	\end{itemize}
+	\item Trieda \texttt{Package}, podtrieda \texttt{SIMLIB} triedy \texttt{Process}, ktorá zastupuje prechod \texttt{0}, tzn. generované objednávky a ich cestu systémom
+	\item Trieda \texttt{DroneReturning}, podtrieda \texttt{SIMLIB} triedy \texttt{Process}
+	\item Trieda \texttt{PackageGenerator}, podtrieda \texttt{SIMLIB} triedy \texttt{Event}
+	\item Trieda \texttt{PackagesQueue }, podtrieda \texttt{SIMLIB} triedy \texttt{Queue}
+\end{itemize}
+
+
+
+\section{Podstata simulačných experimentov a ich priebeh}
+Cieľom experimentálnej činnosti bolo zistiť efektivitu donášky dronmi. Zamerali sme sa na percetuálnu úspešnosť schopnosti doručiť zásielku do 30 minút. Premennými pri experimentovaní bol počet dronov a počet vygenerovaných objednávok resp. s akým intervalom sa má objednávka generovať. Ďaľšími kritériami pri hodnotení efektivity bol čas, ktoré drony strávili nečinnosťou, tzv. v stave \texttt{idle}. 
+
+\subsection{Postup experimentov}
+Pozorujeme výstupy simulácie pre oblasti s rôznou hustotou populácie. Snažíme sa nájsť najvhodnejší počet dronov pre každú oblast, tzn. počet dronov, ktorý je dostačujúci na doručenie všetkých zásielok pod 30 minút, pričom však nie je dronov príliš mnoho, čo by značilo ich neefektívne využitie.
+
+\subsection{Postup experimentov}
+V tejto sekcií sa pozrieme na jednotlivé konkrétne experimenty.
+
+\subsubsection{Experiment 1}
+V prvom experimente sme sa pozreli na vzťah počtu dronov s počtom objednávok. Došli k zpochybneniu našej hypotézy o závislosti počtu objednávok a počtu dronov na úspešnosti. Z obrázku \ref{fig:exp1} je vidieť, že pridanie dronu pri nie vždy spôsobí zvýšenie počtu objednávok, ktoré je systém schopný doručiť včas. V ďaľšom experimente zmeníme pozorované kritérium.
+
+\begin{figure}[h!]
+	\includegraphics[width=\linewidth]{exp1.eps}
+	\caption{Experiment 1}
+	\label{fig:exp1}
+\end{figure}
+
+\subsubsection{Experiment 2}
+V experimente 1 sme zistili podozrenie na chybné určite dôležitých hodnôt. V druhom experimente sledujeme namiesto vzťahu počtu dronov s počtom objednávok závislosť počtu dronov so súčtom vzdialenosti všetkých objednávok. Na obrázku \ref{fig:exp2} môžeme vidieť túto závislosť. Pre spresnenie pozorovaného javu sme nastavili priemernú vzdialenosť donášky na 8000 m.
+
+\newpage
+\begin{figure}[h!]
+	\includegraphics[width=\linewidth]{exp2.eps}
+	\caption{Experiment 2}
+	\label{fig:exp2}
+\end{figure}
+
+\subsubsection{Experiment 3}
+
+Pri druhom experimente sa zistilo, že veľký vplyv na výsledok má prvok náhody pri generovaní vzdialenosti zásielky a najmä prvok náhody pri generovaní jednotlivých objednávok (čas medzi objednávkami). Aj v prípade rovnakého počtu dronov a objednávok. Výsledok môžeme vidieť na obrázku \ref{fig:exp3}. Simulácia prebiehala s priemernou vzdialenosťou objednávok 8000 m s piatimi dronmi. Ako môžeme vidieť, so znižujúcim časom medzi príchodmi objednávok klesá úspešnosť doručovať zásielky včas, avšak vždy bude včas doručených minimálne toľko zásielok, koľko máme dronov.
+
+\begin{figure}[h!]
+	\includegraphics[width=\linewidth]{exp3.eps}
+	\caption{Experiment 3}
+	\label{fig:exp3}
+\end{figure}
+
+V prvých troch experimentoch sme ukázali závislosť jednotlivých hodnôt na úspešnosť. V reálnom systéme však vystupuje prvok náhody pri čase a vzdialenosti objednávok.
+
+\subsubsection{Experiment 4}
+
+Testujeme kritcké hodnoty za pomocí funkcií \texttt{Random()} a \texttt{Exponential()} knižnice \texttt{SIMLIB}. Predpokladáme vysokú hustotu obyvateľstva a kritické obdobie pred Vianocami. Malá časť dňa s denným svetlom a krátka otváracia doba v kombinácií s rapídným nárastom objednávok nám ukáže, ako tento systém zvláda kritické situácie.
+Generovali sme objednávky s exponenciálnym rozdelením 1 min po dobu 299 minút. Po tomto čase sa objednávky uzavreli a ostala nám 180 minútová rezerva na doručenie zásielok. Vzdialenosť bola náhodná v intervale (0, 1). Celkom bolo prijatých 598 objednávok. V experimente sme zistili, že pre tieto vstupy by bolo potrebných 144 dronov pre 100\% úspešnosť. Samozrejme sa toto číslo môže meniť, pretože je závislé na pseudo-náhodných číslach, generovaných funkciami knižnice \texttt{SIMLIB}(\cite{prednasky}, slajd 167.).
+
+\subsection{Závery experimentov}
+Boli prevedené 4 zdokumentované experimenty. V ich priebehu sme určili sme odstránili chybnú hypotézu o dôležitosti počtu dronov na úspešnosť včasnej donášky. Pochopiteľne je počet dronov dôležitý, nie však tak dôležitý ako hustota príchodu objednávok. Dodatočné experimenty neprinesú ďaľšie poznatky, pretože v modely figurujú nepredvídateľné premenné, ktorých hodnoty sa ukážu až pri meraní na systémy v prevádzke.
+
+\section{Zhrnutie simulačných experimentov a záver}
+V rámci projektu vznikol nástroj na simuláciu systému dovozu tovaru dronmi implementovaný v jazyku \texttt{C++} za využitia jeho knižnice \texttt{SIMLIB}.
+Výsledky experimentov ukázali, že plánovaný systém spoločnosti Amazon nie je vhodný pre masovú škálu zákazníkov. Sľub donášať tovar do 30 minút s popísaným typom drona je možný, pri väčšej hustote objednávok však nároky na počet dronov rapídne stúpajú.
+
+
+
+\newpage
+
+\nocite{*}
+\bibliography{zdroje}
+\end{document}
