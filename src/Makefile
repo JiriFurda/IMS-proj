@@ -1,5 +1,5 @@
 all:
-	g++ -O2 -g main.cpp ../lib/simlib.so -o main -std=gnu++11
+	g++ main.cpp -o main -std=gnu++11 -lsimlib -lm
 
 run: clean all
 	./main
