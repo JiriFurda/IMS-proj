@@ -1,4 +1,4 @@
-#define DEBUG_BUILD
+//#define DEBUG_BUILD
 
 #include "main.hpp"
 
@@ -38,19 +38,6 @@ Drone::Drone(void)
     this->beginOfIdle = Time;
     this->returning = false;
 }
-
-Drone* Drone::findFree()
-{
-    for(int i=0; i < SETTINGS_droneCount; i++) // Loop through drones in the system
-    {
-        if(!drones[i].Busy()) // If found available one
-        {
-            return &drones[i];
-        }
-    }
-    return NULL;
-}
-
 
 Drone* Drone::findOptimal(double batteryRequired)
 {
@@ -173,7 +160,6 @@ void Package::getDrone()
     while(!this->drone)
     {
         // Get the drone or go into queue
-        //if(this->drone = Drone::findFree())
         if(this->drone = Drone::findOptimal(this->destinationDistance*2))
         {
             DEBUG("Package has assigned drone\n");
@@ -207,7 +193,6 @@ void Package::sendDroneHome()
 {
     if(this->drone)
     {
-        cout << "208\n";
         this->drone->returning = true;
         Release(*(this->drone));    // Transfer drone to DroneReturning process
         (new DroneReturning(this->drone, destinationDistance))->Activate();

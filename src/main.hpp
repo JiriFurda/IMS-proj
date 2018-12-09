@@ -36,7 +36,6 @@ class Drone : public Facility
         void charge(double value);
         bool returning;
 
-        static Drone* findFree();
         static Drone* findOptimal(double requiredBattery);
 };
 
