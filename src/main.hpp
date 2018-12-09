@@ -34,7 +34,6 @@ class Drone : public Facility
 		double travel(double distance);
         double chargeForFlight(double distance);
         void charge(double value);
-        void updateBattery();
 
         static Drone* findFree();
         static Drone* findOptimal(double requiredBattery);
