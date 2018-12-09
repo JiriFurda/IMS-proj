@@ -2,10 +2,12 @@
 
 #include "main.hpp"
 
+#define CZECH_DAYLIGHT 787
+
 const double SETTINGS_maxBattery = 40000;
 const double SETTINGS_maxDestinationDistance = 16000;
-const int SETTINGS_droneCount = 100;
-const double SETTINGS_systemDuration = 963;
+const int SETTINGS_droneCount = 3;
+const double SETTINGS_systemDuration = CZECH_DAYLIGHT;
 const double SETTINGS_droneSpeed = 80;  // km/h
 const double SETTINGS_droneChargeTime = 120; // How many minutes it takes to charge dron from empty to full battery
 const double SETTINGS_orderAcceptance = SETTINGS_systemDuration - 180; // make sure all packages are delivered
@@ -19,10 +21,10 @@ Stat STAT_chargingWithoutPackage("Charging without assigned package");
 Stat STAT_idlingCharged("Idling fully charged");
 Stat STAT_traveling("Drone in flight");
 Stat STAT_deliveryTime("Delivery time");
+Stat STAT_distance("Destination distance");
 
 PackagesQueue packagesWaitingForDrone("Packages waiting for drone");
 Drone drones[SETTINGS_droneCount];
-
 
 
 
@@ -33,6 +35,7 @@ Drone::Drone(void)
     this->speed = SETTINGS_droneSpeed / 3.6 * 60; // meters per minute
     this->chargingRate = this->batteryMax / SETTINGS_droneChargeTime; // meters per minute
     this->beginOfIdle = Time;
+    this->returning = false;
 }
 
 Drone* Drone::findFree()
@@ -58,7 +61,7 @@ Drone* Drone::findOptimal(double batteryRequired)
     // Search for ideal drone
     for(int i=0; i < SETTINGS_droneCount; i++) // Loop through drones in the system
     {
-        if(!drones[i].Busy()) // If found available one
+        if(!drones[i].Busy() && !drones[i].returning) // If found available one
         {
             if(drones[i].battery >= batteryRequired && drones[i].battery < minBattery)
             {
@@ -80,7 +83,7 @@ Drone* Drone::findOptimal(double batteryRequired)
     if(minIndex != -1)
         return &drones[minIndex];   // Found drone with enough battery
 
-    return &drones[maxIndex]; // Found available drone but not with enough battery
+    return &drones[maxIndex];   // Found available drone but not with enough battery
 }
 
 double Drone::travel(double distance)
@@ -112,6 +115,7 @@ double Drone::chargeForFlight(double distance)
     }
 }
 
+
 void Drone::charge(double value)
 {
     this->battery = min(this->batteryMax, this->battery + value);   // Add charged energy but do not exceed 100%
@@ -121,9 +125,11 @@ void Drone::charge(double value)
 Package::Package(void)
 {
     this->drone = NULL; // Package has no drone when created
-    this->destinationDistance = Random()*SETTINGS_maxDestinationDistance;	// How many meters must be traveled to deliver the package
+    //this->destinationDistance = Random()*SETTINGS_maxDestinationDistance;	// How many meters must be traveled to deliver the package
+    this->destinationDistance = 8000;
     this->createdAt = Time;
 
+    STAT_distance(this->destinationDistance);
 
     DEBUG("Package created (distance=" << this->destinationDistance << ")\n");
     STAT_packagesCount++;
@@ -171,6 +177,7 @@ void Package::getDrone()
         {
             DEBUG("Package has assigned drone\n");
 
+            cout <<"179\n";
             Seize(*(this->drone));
 
             double batteryBeforeIdleCharge = this->drone->battery;
@@ -185,7 +192,7 @@ void Package::getDrone()
             STAT_idlingCharged(idleDuration - (this->drone->battery - batteryBeforeIdleCharge) / this->drone->chargingRate);
 
 
-this->drone->beginOfIdle = -1; // Not idling anymore
+            this->drone->beginOfIdle = -1; // Not idling anymore
         }
 
         else
@@ -200,6 +207,8 @@ void Package::sendDroneHome()
 {
     if(this->drone)
     {
+        cout << "208\n";
+        this->drone->returning = true;
         Release(*(this->drone));    // Transfer drone to DroneReturning process
         (new DroneReturning(this->drone, destinationDistance))->Activate();
     }
@@ -218,7 +227,10 @@ void DroneReturning::Behavior()
 {
     // Seize drone released by delivered package
     if(!this->drone->Busy())
+    {
+        cout << "228\n";
         Seize(*(this->drone));
+    }
     else
         cerr << "ERROR: Drone returning home is already seized\n";
 
@@ -231,7 +243,9 @@ void DroneReturning::Behavior()
 
     // Drone arrived to HQ
     STAT_traveling(this->headquartersDistance*2 / this->drone->speed);
+    cout << "240\n";
     Release(*(this->drone));
+    this->drone->returning = true;
     this->drone->beginOfIdle = Time;
     this->drone = NULL; // Unnecessary
     packagesWaitingForDrone.sendNextPackage();
@@ -254,7 +268,7 @@ void PackageGenerator::Behavior()
     if (Time <= SETTINGS_orderAcceptance)
     {
         (new Package)->Activate();	// Generate new Order
-        Activate(Time+Exponential(0.1));	// Wait untill next generating
+        Activate(Time+ 15);	// Wait untill next generating
     }
 }
 
@@ -276,6 +290,7 @@ int	main()
     STAT_idlingCharged.Output();
     STAT_traveling.Output();
     STAT_deliveryTime.Output();
+    STAT_distance.Output();
 
     cout << "+----------------------------------------------------------+\n";
     cout << "| STATISTIC                                                |\n";
