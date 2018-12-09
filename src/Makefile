@@ -1,8 +1,8 @@
 all:
-	g++ main.cpp -o main -std=gnu++11 -lsimlib -lm
+	g++ -std=gnu++11 -O2 main.cpp -o main -lsimlib -lm
 
 run: clean all
 	./main
 
 clean:
-	rm ./main
+	rm -f ./main
