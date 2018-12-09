@@ -2,11 +2,13 @@
 
 #include "main.hpp"
 
+const double SETTINGS_maxBattery = 40000;
 const double SETTINGS_maxDestinationDistance = 16000;
-const int SETTINGS_droneCount = 30;
-const double SETTINGS_systemDuration = 417;
+const int SETTINGS_droneCount = 10;
+const double SETTINGS_systemDuration = 963;
 const double SETTINGS_droneSpeed = 80;  // km/h
 const double SETTINGS_droneChargeTime = 120; // How many minutes it takes to charge dron from empty to full battery
+const double SETTINGS_orderAcceptance = SETTINGS_systemDuration - 60; // make sure all packages are delivered
 
 int STAT_packagesCount = 0;
 int STAT_packagesDelivered = 0;
@@ -26,11 +28,12 @@ Drone drones[SETTINGS_droneCount];
 
 Drone::Drone(void)
 {
-    this->batteryMax = 40000;	// Drone can travel up to 40 km with full battery
+    this->batteryMax = SETTINGS_maxBattery;	// Drone can travel up to 40 km with full battery
     this->battery = this->batteryMax;	// Drone has full battery when created
     this->speed = SETTINGS_droneSpeed / 3.6 * 60; // meters per minute
     this->chargingRate = this->batteryMax / SETTINGS_droneChargeTime; // meters per minute
     this->beginOfIdle = Time;
+    this->startOfCharge = -1;
 }
 
 Drone* Drone::findFree()
@@ -45,39 +48,52 @@ Drone* Drone::findFree()
     return NULL;
 }
 
+void Drone::updateBattery()
+{
+    if (startOfCharge > 0)
+    {
+        double batteryBeforeIdleCharge = this->battery;
+        int idleDuration = Time - this->beginOfIdle;
+
+        this->charge(idleDuration); // Add charged energy while idling
+        if(batteryBeforeIdleCharge != this->battery)
+        {
+            DEBUG("Idle charged " << this->battery - batteryBeforeIdleCharge << " units\n");
+        }
+        STAT_chargingWithoutPackage((this->battery - batteryBeforeIdleCharge) / this->chargingRate);
+        STAT_idlingCharged(idleDuration - (this->battery - batteryBeforeIdleCharge) / this->chargingRate);
+
+        this->beginOfIdle = -1;  // Not idling anymore 
+
+
+        this->charge((Time - this->startOfCharge)*(this->chargingRate));
+        this->startOfCharge = Time;
+    }
+}
+
 Drone* Drone::findOptimal(double batteryRequired)
 {
-    double minBattery = numeric_limits<double>::max();
-    int minIndex = -1;
-    double maxBattery = numeric_limits<double>::min();
-    int maxIndex = -1;
+    int droneIndex = -1;
+    double minValue = SETTINGS_maxBattery + 1;
 
     // Search for ideal drone
-    for(int i=0; i < SETTINGS_droneCount; i++) // Loop through drones in the system
+    for (int i = 0; i < SETTINGS_droneCount; i++) // Loop through drones in the system
     {
-        if(!drones[i].Busy()) // If found available one
+        if (!drones[i].Busy()) // if found available
         {
-            if(drones[i].battery >= batteryRequired && drones[i].battery < minBattery)
+            drones[i].updateBattery(); // update batteries
+            if (drones[i].battery >= batteryRequired && drones[i].battery < minValue) 
             {
-                minIndex = i;
-                minBattery = drones[i].battery;
-            }
-
-            if(drones[i].battery > maxBattery)
-            {
-                maxIndex = i;
-                maxBattery = drones[i].battery;
+                droneIndex = i;
+                minValue = drones[i].battery;
             }
         }
-    }
+    } 
 
-    if(maxIndex == -1)
-        return NULL;    // Not found
+    if (droneIndex < 0) // no drone with enough battery
+        return NULL;
 
-    if(minIndex != -1)
-        return &drones[minIndex];   // Found drone with enough battery
-
-    return &drones[maxIndex];   // Found available drone but not with enough battery
+    return &drones[droneIndex];
 }
 
 double Drone::travel(double distance)
@@ -118,7 +134,7 @@ void Drone::charge(double value)
 Package::Package(void)
 {
     this->drone = NULL; // Package has no drone when created
-    this->destinationDistance = Uniform(100, SETTINGS_maxDestinationDistance);	// How many meters must be traveled to deliver the package
+    this->destinationDistance = Random()*SETTINGS_maxDestinationDistance;	// How many meters must be traveled to deliver the package
     this->createdAt = Time;
 
 
@@ -169,21 +185,6 @@ void Package::getDrone()
             DEBUG("Package has assigned drone\n");
 
             Seize(*(this->drone));
-
-            double batteryBeforeIdleCharge = this->drone->battery;
-            int idleDuration = Time - this->drone->beginOfIdle;
-
-            this->drone->charge(idleDuration); // Add charged energy while idling
-            if(batteryBeforeIdleCharge != this->drone->battery)
-            {
-                DEBUG("Idle charged " << this->drone->battery - batteryBeforeIdleCharge << " units\n");
-            }
-            STAT_chargingWithoutPackage((this->drone->battery - batteryBeforeIdleCharge) / this->drone->chargingRate);
-            STAT_idlingCharged(idleDuration - (this->drone->battery - batteryBeforeIdleCharge) / this->drone->chargingRate);
-
-
-            this->drone->beginOfIdle = -1;  // Not idling anymore
-        }
         else
         {
             packagesWaitingForDrone.Insert(this);	// Move to the queue for available drone
@@ -229,6 +230,7 @@ void DroneReturning::Behavior()
     STAT_traveling(this->headquartersDistance*2 / this->drone->speed);
     Release(*(this->drone));
     this->drone->beginOfIdle = Time;
+    this->drone->startOfCharge = Time;
     this->drone = NULL; // Unnecessary
     packagesWaitingForDrone.sendNextPackage();
 }
@@ -245,17 +247,19 @@ void PackagesQueue::sendNextPackage()
 
 
 
-
-
 void PackageGenerator::Behavior()
 {
-    (new Package)->Activate();	// Generate new Order
-    Activate(Time+Uniform(1,2));	// Wait untill next generating
+    if (Time <= SETTINGS_orderAcceptance)
+    {
+        (new Package)->Activate();	// Generate new Order
+        Activate(Time+Exponential(100));	// Wait untill next generating
+    }
 }
 
 
 int	main()
 {
+
     // Prepare environment
     Init(0, SETTINGS_systemDuration);
     (new PackageGenerator)->Activate();
